@@ -34,6 +34,7 @@ PG_AREA=(PG_TOP,PG_LEFT,PG_TOP+PG_HEIGHT,PG_LEFT+PG_WIDTH)
 #COLUMN DIVIDORS, ALSO MEASURE USING OSX PREVIEW
 #TABLE OUTER BOUNDARIES ARE NOT TO BE SPECIFIED
 #PG_COLS=(111.62,129.81,143.76,163.71,346.4,465.47) #First two divs separate out the cusip into three pieces
+#Treat three consequtive numbers as one column. This will result in spaces being troduced between numbers
 PG_COLS=(143.76,163.71,346.4,465.47) #First two divs separate out the cusip into three pieces
 # WHEN DEFINIING AREA SWITCH OFF AUTO-DETECTION, IE GUESS=OFF
 
@@ -76,6 +77,10 @@ for f in file_items:
     print ("Extracting pages:\t", start_page, '-', num_pages)
     #tabula.convert_into(filename, filename + '.csv', output_format="csv", pages= str(start_page) + '-' + str(num_pages),area=PG_AREA,columns=PG_COLS,guess=False,java_options=JAVA_OPTS)
     df = tabula.read_pdf(filename,pages= str(start_page)+'-'+str(num_pages),area=PG_AREA,columns=PG_COLS,guess=False,java_options=JAVA_OPTS,pandas_options={'error_bad_lines':False, 'names':TBL_HEADER})
+    
+    #delete blank spaces in the first column
+    df[TBL_HEADER[0]]=df[TBL_HEADER[0]].str.replace(' ','')
+
     #last line contains total count as imported from pdf
     expected_row_count = int("".join(re.findall(r'\d',(str(df.iloc[len(df)-1][len(TBL_HEADER)-1])))))
     print ("Expected row count:\t{ROWCOUNT}".format(ROWCOUNT=expected_row_count))
