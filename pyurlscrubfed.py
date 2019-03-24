@@ -10,7 +10,7 @@ import pandas as pd
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import re
 import click
-import os
+import os, glob
 
 AREF_HTML = 'https://www.sec.gov/divisions/investment/13flists.htm'
 AREF_HTML_LATEST_CLASS = 'blue-chevron'
@@ -154,21 +154,20 @@ def main(file,selector):
     #disable a pesky warning
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-    # by default assume that we are going to download a fresh file
-    local_file = False
-
     #LOCAL FILE
     if (file is not None):
         #optional file argument was specified
         #check if specified file exists
         if (not os.path.isfile(file)):
-            print ("Specified file {FILE} does not exist. Exiting...".format(FILE=file))
+            print ("Input file {FNAME} does not exist. Exiting...".format(FNAME=file))
             quit()
         else:
-            #local file exists, lets use it
+            #local pdf file exists, lets use it
             filename = file
+            filename_xlsx = filename+'.xlsx'
+
             df=pdf2df (filename)
-            df.to_excel(filename+'.xlsx',index=False,header=True)
+            df.to_excel(filename_xlsx,index=False,header=True)
 
     #REMOTE FILE
     else:
@@ -182,16 +181,14 @@ def main(file,selector):
             link = host + li.a.get('href')
 
             filename = link.rsplit('/', 1)[-1]
+            filename_xlsx = filename+'.xlsx'
+
             print ("---\n{RNAME}: \t{FNAME}".format(RNAME=li.text, FNAME=filename))
-            #print ("Processing file...")
-            #print ("PDF file link:\t", link)
-            #print ("PDF filename:\t", filename)
-            
-            print (link)
+
             r = requests.get(link, allow_redirects=True)
             open (filename, 'wb').write(r.content)
             df=pdf2df (filename)
-            df.to_excel(filename+'.xlsx',index=False,header=True)
+            df.to_excel(filename_xlsx,index=False,header=True)
 
 if __name__ == '__main__':
     main()
