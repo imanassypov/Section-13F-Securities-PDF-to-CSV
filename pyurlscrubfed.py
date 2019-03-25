@@ -141,7 +141,14 @@ def pdf2df(filename):
 @click.option(
     '--selector', '-s',
     help='specify year and quarter of the report, ie 2018q4')
-def main(file,selector):
+@click.option(
+    '--dir', '-d',
+    help='inner join on each file in specified directory against sec13f report')
+@click.option(
+    '--on', '-o',
+    help='join on column name',
+    default='CUSIP - Current')
+def main(file,selector,dir,on):
     """
     USE AT YOUR OWN RISK.
     Utility to pull down the list of Section 13(f) securities from
@@ -153,6 +160,20 @@ def main(file,selector):
 
     #disable a pesky warning
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+    #list of local panda dataframes to join on the results
+    in_dfs =[]
+
+    #Check if inner join is requested on list of local reports
+    if (dir is not None):
+        if (not os.path.isdir(dir)):
+            print ("Input join directory {DNAME} does not exist. Exiting...".format(DNAME=dir))
+            quit()
+        else:
+            exts = ['*.xls', '*.xlsx']
+            files = [f for ext in exts for f in glob.glob(os.path.join(dir, ext))]
+            in_dfs = [pd.read_excel(f) for f in files]
+            print ("Read in {DFS} source reports. Will join on '{ON}' column.".format(DFS=len(in_dfs),ON=on))
 
     #LOCAL FILE
     if (file is not None):
@@ -166,8 +187,14 @@ def main(file,selector):
             filename = file
             filename_xlsx = filename+'.xlsx'
 
-            df=pdf2df (filename)
+            df=pdf2df(filename)
             df.to_excel(filename_xlsx,index=False,header=True)
+
+            i=0
+            for left_df in in_dfs:
+                print("Inner JOIN '{LEFT}' '{RIGHT}' ON '{ON}'".format(LEFT=files[i],RIGHT=filename,ON=on))
+                (left_df.merge(df,left_on=on,right_on=TBL_HEADER[0],how='inner')).to_excel(files[i]+'-'+filename_xlsx,index=False,header=True)
+                i=i+1
 
     #REMOTE FILE
     else:
@@ -185,10 +212,18 @@ def main(file,selector):
 
             print ("---\n{RNAME}: \t{FNAME}".format(RNAME=li.text, FNAME=filename))
 
+            # download report file
             r = requests.get(link, allow_redirects=True)
             open (filename, 'wb').write(r.content)
-            df=pdf2df (filename)
+
+            df=pdf2df(filename)
             df.to_excel(filename_xlsx,index=False,header=True)
+
+            i=0
+            for left_df in in_dfs:
+                print("Inner JOIN '{LEFT}' '{RIGHT}' ON '{ON}'".format(LEFT=files[i],RIGHT=filename,ON=on))
+                (left_df.merge(df,left_on=on,right_on=TBL_HEADER[0],how='inner')).to_excel(files[i]+'-'+filename_xlsx,index=False,header=True)
+                i=i+1
 
 if __name__ == '__main__':
     main()
