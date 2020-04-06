@@ -117,7 +117,11 @@ def pdf2df(filename):
         columns=PG_COLS,
         guess=False,
         java_options=JAVA_OPTS,
-        pandas_options={'error_bad_lines':False, 'names':TBL_HEADER})
+        multiple_tables=False,
+        pandas_options={'names':TBL_HEADER})
+
+    #pop the df out of the list
+    df = df[0]
 
     #delete blank spaces in the first column
     df[TBL_HEADER[0]]=df[TBL_HEADER[0]].str.replace(' ','')
