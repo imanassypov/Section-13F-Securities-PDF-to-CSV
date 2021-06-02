@@ -31,7 +31,7 @@ requests==2.23.0
 six==1.14.0
 soupsieve==2.0
 tabula-py==2.1.0
-urllib3==1.25.8
+urllib3==1.26.5
 virtualenv==20.0.16
 virtualenv-clone==0.5.4
 zipp==3.1.0
