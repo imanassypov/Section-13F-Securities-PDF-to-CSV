@@ -11,6 +11,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import re
 import click
 import os, glob
+from urllib.parse import urlparse
 
 AREF_HTML = 'https://www.sec.gov/divisions/investment/13flists.htm'
 AREF_HTML_LATEST_CLASS = 'blue-chevron'
@@ -48,6 +49,10 @@ JAVA_OPTS='-Xmx2G'
 
 #imported table headers
 TBL_HEADER=["CUSIP NO","-","ISSUER NAME", "ISSUER DESCRIPTION", "STATUS"]
+
+def is_absolute(url):
+    ## Is url absolute or relative
+    return bool(urlparse(url).netloc)
 
 def scrub_lis (http_url, selector):
     # Useful section of page is stored in '<div class="article-body">'
@@ -208,8 +213,16 @@ def main(file,selector,dir,on):
             # get the top level host fqdn address, as all the li elements contain 
             # indirect sub-links to the tld
             p = '(?P<host>http.*://[^:/ ]+).?(?P<port>[0-9]*).*'
+
             host = re.search(p,AREF_HTML).group('host')
-            link = host + li.a.get('href')
+
+            if (is_absolute(li.a.get('href'))):
+                link = li.a.get('href')
+            else:
+                link = host + li.a.get('href')
+
+            link = li.a.get('href')
+
 
             filename = link.rsplit('/', 1)[-1]
             filename_xlsx = filename+'.xlsx'
