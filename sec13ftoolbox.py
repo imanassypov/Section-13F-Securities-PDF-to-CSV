@@ -111,8 +111,8 @@ def scrub_lis (http_url, selector):
 def pdf2df(filename):
     #get number of pages in the specified file
     pdfFObj = open (filename, 'rb')
-    pdfReader = PyPDF2.PdfFileReader(pdfFObj)
-    num_pages = pdfReader.numPages
+    pdfReader = PyPDF2.PdfReader(pdfFObj)
+    num_pages = len(pdfReader.pages)
 
     print ("{FILENAME}: extracting pages:{PG_START}-{PG_END}".format(FILENAME=filename,PG_START=PG_START_INDEX, PG_END=num_pages))
 
@@ -220,9 +220,6 @@ def main(file,selector,dir,on):
                 link = li.a.get('href')
             else:
                 link = host + li.a.get('href')
-
-            link = li.a.get('href')
-
 
             filename = link.rsplit('/', 1)[-1]
             filename_xlsx = filename+'.xlsx'

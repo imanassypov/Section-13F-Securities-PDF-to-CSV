@@ -1,3 +1,5 @@
+requests
+click
 numpy
 bs4
 pypdf2
